@@ -29,14 +29,14 @@ TODO(chen):
 //
 // API
 
-struct material
+struct ch_material
 {
     char Name[255];
     float Albedo[4];
     float Emission[3];
 };
 
-struct vertex
+struct ch_vertex
 {
     float P[3];
     float N[3];
@@ -44,7 +44,7 @@ struct vertex
     float Emission[3];
 };
 
-vertex *LoadObj(char *Path);
+ch_vertex *CHLoadObj(char *Path);
 
 //
 //
@@ -59,10 +59,10 @@ vertex *LoadObj(char *Path);
 #include <string.h>
 #include "ch_buf.h"
 
-#define ASSERT(Value) assert(Value)
+#define CH_ASSERT(Value) assert(Value)
 
 static char *
-ReadFile(char *FilePath)
+CHReadFile(char *FilePath)
 {
     char *Buffer = 0;
     
@@ -84,7 +84,7 @@ ReadFile(char *FilePath)
 }
 
 inline char *
-GotoNextLine(char *Ptr)
+CHGotoNextLine(char *Ptr)
 {
     while (*Ptr != '\n')
     {
@@ -100,7 +100,7 @@ GotoNextLine(char *Ptr)
 }
 
 inline int
-Length(char *Str)
+CHLength(char *Str)
 {
     int Count = 0;
     
@@ -114,7 +114,7 @@ Length(char *Str)
 }
 
 inline bool
-Equal(char *Str1, char *Str2)
+CHEqual(char *Str1, char *Str2)
 {
     while (*Str1 && *Str2)
     {
@@ -127,9 +127,9 @@ Equal(char *Str1, char *Str2)
 }
 
 inline bool
-StartsWith(char *Str, char *SubStr)
+CHStartsWidth(char *Str, char *SubStr)
 {
-    for (int CharIndex = 0; CharIndex < Length(SubStr); ++CharIndex)
+    for (int CharIndex = 0; CharIndex < CHLength(SubStr); ++CharIndex)
     {
         if (Str[CharIndex] != SubStr[CharIndex])
         {
@@ -141,7 +141,7 @@ StartsWith(char *Str, char *SubStr)
 }
 
 inline char *
-SkipSpaces(char *Cursor)
+CHSkipSpaces(char *Cursor)
 {
     char *EndCursor = Cursor;
     
@@ -154,11 +154,11 @@ SkipSpaces(char *Cursor)
 }
 
 #define EXPECT_STR(Cursor, S) \
-if (!StartsWith(Cursor, S)) \
+if (!CHStartsWidth(Cursor, S)) \
 { \
     return false; \
 } \
-Cursor += Length(S); \
+Cursor += CHLength(S); \
 
 #define EXPECT_CHAR(Cursor, C) \
 if (*Cursor != C) \
@@ -168,13 +168,13 @@ if (*Cursor != C) \
 Cursor += 1; \
 
 inline bool
-ParseString(char *Cursor, char *Prefix, char *Buffer_Out)
+CHParseString(char *Cursor, char *Prefix, char *Buffer_Out)
 {
-    Cursor = SkipSpaces(Cursor);
+    Cursor = CHSkipSpaces(Cursor);
     
     EXPECT_STR(Cursor, Prefix);
     
-    Cursor = SkipSpaces(Cursor);
+    Cursor = CHSkipSpaces(Cursor);
     
     int BufferIndex = 0;
     while (*Cursor != '\n')
@@ -186,10 +186,10 @@ ParseString(char *Cursor, char *Prefix, char *Buffer_Out)
 }
 
 inline char *
-ReadInteger(char *Str, int32_t *Integer_Out)
+CHReadInteger(char *Str, int32_t *Integer_Out)
 {
     char *Cursor = Str;
-    Cursor = SkipSpaces(Cursor);
+    Cursor = CHSkipSpaces(Cursor);
     
     int Sign = 1;
     if (*Cursor == '-')
@@ -210,10 +210,10 @@ ReadInteger(char *Str, int32_t *Integer_Out)
 }
 
 inline char *
-ReadFloat(char *Str, float *Float_Out)
+CHReadFloat(char *Str, float *Float_Out)
 {
     char *Cursor = Str;
-    Cursor = SkipSpaces(Cursor);
+    Cursor = CHSkipSpaces(Cursor);
     
     float Sign = 1.0f;
     if (*Cursor == '-')
@@ -251,7 +251,7 @@ ReadFloat(char *Str, float *Float_Out)
         Cursor += 1;
         
         int Exponent = 0;
-        Cursor = ReadInteger(Cursor, &Exponent);
+        Cursor = CHReadInteger(Cursor, &Exponent);
         E = powf(10.0f, (float)Exponent);
     }
     
@@ -260,48 +260,48 @@ ReadFloat(char *Str, float *Float_Out)
 }
 
 inline bool
-ParseFloat(char *Cursor, char *Prefix, float *Float_Out)
+CHParseFloat(char *Cursor, char *Prefix, float *Float_Out)
 {
-    Cursor = SkipSpaces(Cursor);
+    Cursor = CHSkipSpaces(Cursor);
     EXPECT_STR(Cursor, Prefix);
-    Cursor = SkipSpaces(Cursor);
+    Cursor = CHSkipSpaces(Cursor);
     
-    Cursor = ReadFloat(Cursor, Float_Out);
+    Cursor = CHReadFloat(Cursor, Float_Out);
     
     return true;
 }
 
 inline bool
-ParseV3(char *Cursor, char *Prefix, float V_Out[3])
+CHParseV3(char *Cursor, char *Prefix, float V_Out[3])
 {
-    Cursor = SkipSpaces(Cursor);
+    Cursor = CHSkipSpaces(Cursor);
     EXPECT_STR(Cursor, Prefix);
-    Cursor = SkipSpaces(Cursor);
+    Cursor = CHSkipSpaces(Cursor);
     
     for (int I = 0; I < 3; ++I)
     {
-        Cursor = ReadFloat(Cursor, V_Out + I);
+        Cursor = CHReadFloat(Cursor, V_Out + I);
     }
     
     return true;
 }
 
 inline bool 
-ParseFaceWithTexCoord(char *Cursor, int *VertexIndices, int *NormalIndices)
+CHParseFaceWithTexCoord(char *Cursor, int *VertexIndices, int *NormalIndices)
 {
-    Cursor = SkipSpaces(Cursor);
+    Cursor = CHSkipSpaces(Cursor);
     EXPECT_CHAR(Cursor, 'f');
     
     for (int PointIndex = 0; PointIndex < 3; ++PointIndex)
     {
-        Cursor = SkipSpaces(Cursor);
+        Cursor = CHSkipSpaces(Cursor);
         
         int VertexIndex, TexIndex, NormalIndex;
-        Cursor = ReadInteger(Cursor, &VertexIndex);
+        Cursor = CHReadInteger(Cursor, &VertexIndex);
         EXPECT_CHAR(Cursor, '/');
-        Cursor = ReadInteger(Cursor, &TexIndex);
+        Cursor = CHReadInteger(Cursor, &TexIndex);
         EXPECT_CHAR(Cursor, '/');
-        Cursor = ReadInteger(Cursor, &NormalIndex);
+        Cursor = CHReadInteger(Cursor, &NormalIndex);
         
         VertexIndices[PointIndex] = VertexIndex;
         NormalIndices[PointIndex] = NormalIndex;
@@ -313,59 +313,59 @@ ParseFaceWithTexCoord(char *Cursor, int *VertexIndices, int *NormalIndices)
 #undef EXPECT_STR
 #undef EXPECT_CHAR
 
-static vertex *
-LoadObj(char *Path)
+static ch_vertex *
+CHLoadObj(char *Path)
 {
-    vertex *Vertices = {};
+    ch_vertex *Vertices = {};
     
     char MtlPath[255];
     snprintf(MtlPath, sizeof(MtlPath), "%s.mtl", Path);
     char ObjPath[255];
     snprintf(ObjPath, sizeof(ObjPath), "%s.obj", Path);
     
-    material *Mats = 0;
+    ch_material *Mats = 0;
     
-    char *MtlFileContent = ReadFile(MtlPath);
+    char *MtlFileContent = CHReadFile(MtlPath);
     if (MtlFileContent)
     {
         char *MtlFileWalker = MtlFileContent;
         
         while (*MtlFileWalker)
         {
-            if (StartsWith(MtlFileWalker, "newmtl"))
+            if (CHStartsWidth(MtlFileWalker, "newmtl"))
             {
-                material NewMat = {};
-                ParseString(MtlFileWalker, "newmtl", NewMat.Name);
+                ch_material NewMat = {};
+                CHParseString(MtlFileWalker, "newmtl", NewMat.Name);
                 BufPush(Mats, NewMat);
             }
-            else if (StartsWith(MtlFileWalker, "Kd"))
+            else if (CHStartsWidth(MtlFileWalker, "Kd"))
             {
-                ASSERT(BufCount(Mats) > 0);
+                CH_ASSERT(BufCount(Mats) > 0);
                 
                 float Albedo3[3] = {};
-                ParseV3(MtlFileWalker, "Kd", Albedo3);
+                CHParseV3(MtlFileWalker, "Kd", Albedo3);
                 BufLast(Mats).Albedo[0] = Albedo3[0];
                 BufLast(Mats).Albedo[1] = Albedo3[1];
                 BufLast(Mats).Albedo[2] = Albedo3[2];
                 BufLast(Mats).Albedo[3] = 1.0f;
             }
-            else if (StartsWith(MtlFileWalker, "d"))
+            else if (CHStartsWidth(MtlFileWalker, "d"))
             {
-                ASSERT(BufCount(Mats) > 0);
-                ParseFloat(MtlFileWalker, "d", &BufLast(Mats).Albedo[3]);
+                CH_ASSERT(BufCount(Mats) > 0);
+                CHParseFloat(MtlFileWalker, "d", &BufLast(Mats).Albedo[3]);
             }
-            else if (StartsWith(MtlFileWalker, "Ke"))
+            else if (CHStartsWidth(MtlFileWalker, "Ke"))
             {
-                ASSERT(BufCount(Mats) > 0);
-                ParseV3(MtlFileWalker, "Ke", BufLast(Mats).Emission);
+                CH_ASSERT(BufCount(Mats) > 0);
+                CHParseV3(MtlFileWalker, "Ke", BufLast(Mats).Emission);
             }
             
-            MtlFileWalker = GotoNextLine(MtlFileWalker);
+            MtlFileWalker = CHGotoNextLine(MtlFileWalker);
         }
     }
     free(MtlFileContent);
     
-    char *ObjFileContent = ReadFile(ObjPath);
+    char *ObjFileContent = CHReadFile(ObjPath);
     if (!ObjFileContent)
     {
         return 0;
@@ -382,25 +382,25 @@ LoadObj(char *Path)
     ObjFileWalker = ObjFileContent;
     while (*ObjFileWalker)
     {
-        if (StartsWith(ObjFileWalker, "vn"))
+        if (CHStartsWidth(ObjFileWalker, "vn"))
         {
             float Normal[3] = {};
-            ParseV3(ObjFileWalker, "vn", Normal);
+            CHParseV3(ObjFileWalker, "vn", Normal);
             
             BufPush(TempNormals, Normal[0]);
             BufPush(TempNormals, Normal[1]);
             BufPush(TempNormals, Normal[2]);
         }
-        else if (StartsWith(ObjFileWalker, "v"))
+        else if (CHStartsWidth(ObjFileWalker, "v"))
         {
             float Vertex[3] = {};
-            ParseV3(ObjFileWalker, "v", Vertex);
+            CHParseV3(ObjFileWalker, "v", Vertex);
             
             BufPush(TempVertices, Vertex[0]);
             BufPush(TempVertices, Vertex[1]);
             BufPush(TempVertices, Vertex[2]);
         }
-        else if (StartsWith(ObjFileWalker, "f"))
+        else if (CHStartsWidth(ObjFileWalker, "f"))
         {
             //NOTE(chen): discards faces with alpha less than 1
             bool FaceIsTransparent = (CurrentMatIndex != -1 &&
@@ -411,8 +411,8 @@ LoadObj(char *Path)
                 int VertexIndices[3] = {};
                 int NormalIndices[3] = {};
                 
-                bool ParsedFace = ParseFaceWithTexCoord(ObjFileWalker, VertexIndices, NormalIndices);
-                ASSERT(ParsedFace);
+                bool ParsedFace = CHParseFaceWithTexCoord(ObjFileWalker, VertexIndices, NormalIndices);
+                CH_ASSERT(ParsedFace);
                 
                 for (int VI = 0; VI < 3; ++VI)
                 {
@@ -438,10 +438,10 @@ LoadObj(char *Path)
                         NormalIndices[VI] -= 1;
                     }
                     
-                    ASSERT(VertexIndices[VI] >= 0 && VertexIndices[VI] < BufCount(TempVertices));
-                    ASSERT(NormalIndices[VI] >= 0 && NormalIndices[VI] < BufCount(TempNormals));
+                    CH_ASSERT(VertexIndices[VI] >= 0 && VertexIndices[VI] < BufCount(TempVertices));
+                    CH_ASSERT(NormalIndices[VI] >= 0 && NormalIndices[VI] < BufCount(TempNormals));
                     
-                    vertex NewVertex = {};
+                    ch_vertex NewVertex = {};
                     
                     int VertexStartIndex = VertexIndices[VI] * 3;
                     memcpy(NewVertex.P, TempVertices + VertexStartIndex,
@@ -460,7 +460,7 @@ LoadObj(char *Path)
                     }
                     else
                     {
-                        //NOTE(chen): default material
+                        //NOTE(chen): default ch_material
                         NewVertex.Albedo[0] = 0.64f;
                         NewVertex.Albedo[1] = 0.64f;
                         NewVertex.Albedo[2] = 0.64f;
@@ -478,26 +478,26 @@ LoadObj(char *Path)
                 AlphaVertexCount += 3;
             }
         }
-        else if (StartsWith(ObjFileWalker, "usemtl"))
+        else if (CHStartsWidth(ObjFileWalker, "usemtl"))
         {
             char MtlName[255];
-            ParseString(ObjFileWalker, "usemtl", MtlName);
+            CHParseString(ObjFileWalker, "usemtl", MtlName);
             
             int NewMatIndex = -1;
             for (int MatIndex = 0; MatIndex < BufCount(Mats); ++MatIndex)
             {
-                if (Equal(MtlName, Mats[MatIndex].Name))
+                if (CHEqual(MtlName, Mats[MatIndex].Name))
                 {
                     NewMatIndex = MatIndex;
                     break;
                 }
             }
             
-            ASSERT(NewMatIndex != -1);
+            CH_ASSERT(NewMatIndex != -1);
             CurrentMatIndex = NewMatIndex;
         }
         
-        ObjFileWalker = GotoNextLine(ObjFileWalker);
+        ObjFileWalker = CHGotoNextLine(ObjFileWalker);
     }
     free(ObjFileContent);
     

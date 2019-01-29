@@ -7,7 +7,7 @@
 int main()
 {
     printf("******CORRECTNESS TEST: LOAD cube.obj*****\n\n");
-    vertex *Cube = LoadObj("../data/cube");
+    ch_vertex *Cube = CHLoadObj("../data/cube");
     
     for (int VertexIndex = 0; VertexIndex < BufCount(Cube); ++VertexIndex)
     {
@@ -36,7 +36,7 @@ int main()
     printf("******PERFORMANCE TEST: LOAD buddha.obj*****\n\n");
     
     clock_t BeginLoad = clock();
-    vertex *Buddha = LoadObj("../data/buddha");
+    ch_vertex *Buddha = CHLoadObj("../data/buddha");
     clock_t EndLoad = clock();
     float SecondsTook = (float)(EndLoad - BeginLoad) / (float)CLOCKS_PER_SEC;
     printf("loaded %d vertices\n", (int)BufCount(Buddha));
